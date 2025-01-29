@@ -29,6 +29,7 @@ class VideoProcessor(QObject):
     frame_processed_signal = Signal(int, QPixmap, numpy.ndarray)
     webcam_frame_processed_signal = Signal(QPixmap, numpy.ndarray)
     single_frame_processed_signal = Signal(int, QPixmap, numpy.ndarray)
+    stop_start_signal = Signal()
     def __init__(self, main_window: 'MainWindow', num_threads=5):
         super().__init__()
         self.main_window = main_window
@@ -75,6 +76,13 @@ class VideoProcessor(QObject):
         self.gpu_memory_update_timer.timeout.connect(partial(common_widget_actions.update_gpu_memory_progressbar, main_window))
 
         self.single_frame_processed_signal.connect(self.display_current_frame)
+        self.stop_start_signal.connect(self.stop_refresh_start)
+
+    Slot()
+    def stop_refresh_start(self):
+        self.main_window.buttonMediaPlay.click()
+        common_widget_actions.refresh_frame(self.main_window)
+        self.main_window.buttonMediaPlay.click()
 
     Slot(int, QPixmap, numpy.ndarray)
     def store_frame_to_display(self, frame_number, pixmap, frame):
@@ -201,7 +209,6 @@ class VideoProcessor(QObject):
             self.frame_display_timer.timeout.connect(self.display_next_webcam_frame)
             self.frame_display_timer.start()
             self.gpu_memory_update_timer.start(5000) #Update GPU memory progressbar every 5 Seconds
-
 
 
     def process_next_frame(self):

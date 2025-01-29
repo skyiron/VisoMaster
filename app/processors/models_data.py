@@ -291,12 +291,14 @@ models_list = [
     {
         "model_name": "LivePortraitMotionExtractor",
         "local_path": "./app/onnxmodels/liveportrait_onnx/motion_extractor.onnx",
-        "hash": "99d4b3c9dd3fd301910de9415a29560e38c0afaa702da51398281376cc36fdd3"
+        "hash": "99d4b3c9dd3fd301910de9415a29560e38c0afaa702da51398281376cc36fdd3",
     },
     {
         "model_name": "LivePortraitAppearanceFeatureExtractor",
         "local_path": "./app/onnxmodels/liveportrait_onnx/appearance_feature_extractor.onnx",
-        "hash": "dbbbb44e4bba12302d7137bdee6a0f249b45fb6dd879509fd5baa27d70c40e32"
+        "hash": "dbbbb44e4bba12302d7137bdee6a0f249b45fb6dd879509fd5baa27d70c40e32",
+        "url": 'https://github.com/argenspin/rope-assets/releases/download/1.0.2/appearance_feature_extractor.onnx',
+
     },
     {
         "model_name": "LivePortraitStitchingEye",

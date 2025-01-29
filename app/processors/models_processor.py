@@ -31,6 +31,7 @@ from app.processors.utils.dfm_model import DFMModel
 from app.processors.models_data import models_list, arcface_mapping_model_dict, models_trt_list
 from app.helpers.miscellaneous import is_file_exists
 from app.helpers.downloader import download_file
+from app.helpers.exceptions import ModelLoadWhilePlayingException
 
 if TYPE_CHECKING:
     from app.ui.main_ui import MainWindow
@@ -122,8 +123,19 @@ class ModelsProcessor(QtCore.QObject):
         self.lp_mask_crop = self.face_editors.lp_mask_crop
         self.lp_lip_array = self.face_editors.lp_lip_array
 
+    def check_video_playing_before_model_loading(self):
+        # If this was called while the video is playing,
+        # then all the frame processing threads are force stopped by raising the ModelLoadWhilePlayingException to stop the video
+        # Then the refresh_frame() is called to process a single frame (using the stop_start_signal), so as to make sure all the required models are loading from the main thread
+        # This is to make the whole process more stable. The exception is raised to force stop the thread, until I come up with a better solution
+        if self.main_window.video_processor.processing:
+            self.main_window.video_processor.stop_start_signal.emit()
+            raise ModelLoadWhilePlayingException("Models shouldn't be loaded while playing. Attempting to restart the playback after loading the model")
+            
     def load_model(self, model_name, session_options=None):
         with self.model_lock:
+
+            self.check_video_playing_before_model_loading()
             self.main_window.model_loading_signal.emit()
             # QApplication.processEvents()
             if not is_file_exists(self.models_path[model_name]):
@@ -164,21 +176,27 @@ class ModelsProcessor(QtCore.QObject):
 
 
     def load_model_trt(self, model_name, custom_plugin_path=None, precision='fp16', debug=False):
-        # self.showModelLoadingProgressBar()
-        #time.sleep(0.5)
-        self.main_window.model_loading_signal.emit()
 
-        if not os.path.exists(self.models_trt_path[model_name]):
-            onnx2trt(onnx_model_path=self.models_path[model_name],
-                     trt_model_path=self.models_trt_path[model_name],
-                     precision=precision,
-                     custom_plugin_path=custom_plugin_path,
-                     verbose=False
-                    )
-        model_instance = TensorRTPredictor(model_path=self.models_trt_path[model_name], custom_plugin_path=custom_plugin_path, pool_size=self.nThreads, device=self.device, debug=debug)
+        with self.model_lock:
 
-        self.main_window.model_loaded_signal.emit()
-        return model_instance
+            self.check_video_playing_before_model_loading()
+
+            self.main_window.model_loading_signal.emit()
+
+            if not is_file_exists(self.models_path[model_name]):
+                download_file(model_name, self.models_path[model_name], self.models_data[model_name]['hash'], self.models_data[model_name]['url'])
+                
+            if not os.path.exists(self.models_trt_path[model_name]):
+                onnx2trt(onnx_model_path=self.models_path[model_name],
+                        trt_model_path=self.models_trt_path[model_name],
+                        precision=precision,
+                        custom_plugin_path=custom_plugin_path,
+                        verbose=False
+                        )
+            model_instance = TensorRTPredictor(model_path=self.models_trt_path[model_name], custom_plugin_path=custom_plugin_path, pool_size=self.nThreads, device=self.device, debug=debug)
+
+            self.main_window.model_loaded_signal.emit()
+            return model_instance
 
     def delete_models(self):
         for model_name, model_instance in self.models.items():
