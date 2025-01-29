@@ -174,6 +174,7 @@ class FrameWorker(threading.Thread):
                                         s_e = None
                                 else:
                                     dfm_model = None
+                                    s_e = None
 
                                 # swap_core function is executed even if 'Swap Faces' button is disabled,
                                 # because it also returns the original face and face mask 
