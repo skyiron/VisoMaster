@@ -10,6 +10,8 @@ from torchvision.transforms import v2
 import torchvision
 from torchvision import transforms
 
+from PySide6.QtCore import QThread
+
 import numpy as np
 
 from app.processors.utils import faceutil
@@ -22,7 +24,7 @@ if TYPE_CHECKING:
 
 torchvision.disable_beta_transforms_warning()
 
-class FrameWorker(threading.Thread):
+class FrameWorker(QThread):
     def __init__(self, frame, main_window: 'MainWindow', frame_number, frame_queue, is_single_frame=False):
         super().__init__()
         self.frame_queue = frame_queue

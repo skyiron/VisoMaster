@@ -12,7 +12,7 @@ import cv2
 import numpy
 import torch
 
-from PySide6.QtCore import QObject, QTimer, Signal, Slot
+from PySide6.QtCore import QObject, QTimer, Signal, Slot, QThread
 from PySide6.QtGui import QPixmap
 from app.processors.workers.frame_worker import FrameWorker
 from app.ui.widgets.actions import graphics_view_actions
@@ -42,7 +42,7 @@ class VideoProcessor(QObject):
         self.max_frame_number = 0
         self.media_path = None
         self.num_threads = num_threads
-        self.threads: Dict[int, threading.Thread] = {}
+        self.threads: Dict[int, QThread] = {}
 
         self.current_frame: numpy.ndarray = []
         self.recording = False
@@ -379,8 +379,9 @@ class VideoProcessor(QObject):
     def join_and_clear_threads(self):
         print("Joining Threads")
         for _, thread in self.threads.items():
-            if thread.is_alive():
-                thread.join()
+            if thread.isRunning():
+                thread.wait()
+                thread.quit()
         print('Clearing Threads')
         self.threads.clear()
     
