@@ -125,7 +125,7 @@ class ModelsProcessor(QtCore.QObject):
 
     def check_video_playing_before_model_loading(self):
         # If this was called while the video is playing,
-        # then all the frame processing threads are force stopped by raising the ModelLoadWhilePlayingException to stop the video
+        # then all the frame processing threads are force stopped by raising the ModelLoadWhilePlayingException, thereby stopping the video.
         # Then the refresh_frame() is called to process a single frame (using the stop_start_signal), so as to make sure all the required models are loading from the main thread
         # This is to make the whole process more stable. The exception is raised to force stop the thread, until I come up with a better solution
         if self.main_window.video_processor.processing:
